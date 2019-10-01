@@ -53,11 +53,11 @@ func TestLex(t *testing.T) {
 		for r := range lex(c.input) {
 			switch {
 			case r.err != nil:
-				t.Fatalf("error occurred while lexing: %v", r.err)
+				t.Fatalf("error occurred while lexing: %v (input: %s)", r.err, c.input)
 			case idx == len(c.expected):
-				t.Fatal("too many lexemes")
+				t.Fatalf("too many lexemes (input: %s)", c.input)
 			case r.l != c.expected[idx]:
-				t.Fatalf("expected %v; got %v", c.expected[idx], r.l)
+				t.Fatalf("expected %v; got %v (input: %s)", c.expected[idx], r.l, c.input)
 			}
 			idx++
 		}
