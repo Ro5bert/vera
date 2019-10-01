@@ -8,12 +8,12 @@ import (
 )
 
 const (
-	Negate        = '!'
-	AND           = '&'
-	OR            = '|'
-	XOR           = '^'
-	Conditional   = '>'
-	BiConditional = '='
+	negateSym = '!'
+	andSym    = '&'
+	orSym     = '|'
+	xorSym    = '^'
+	condSym   = '>'
+	bicondSym = '='
 )
 
 type lexemeType byte
@@ -122,7 +122,7 @@ func lexStatement(n byte, l *lexer) (lexemeType, statefn, error) {
 	// Some branches in the below switch set the allowEOF flag based on other conditions.
 	l.allowEOF = l.nestCnt == 0
 	switch n {
-	case Negate:
+	case negateSym:
 		l.allowEOF = false
 		return LTNegate, lexStatement, nil
 	case '(':
@@ -136,7 +136,7 @@ func lexStatement(n byte, l *lexer) (lexemeType, statefn, error) {
 	if ('a' <= n && n <= 'z') || ('A' <= n && n <= 'Z') {
 		return LTStatement, lexOperator, nil
 	}
-	return 0, nil, fmt.Errorf("unexpected char '%c'; expected '%c', '(', '0', '1', or a statement", n, Negate)
+	return 0, nil, fmt.Errorf("unexpected char '%c'; expected '%c', '(', '0', '1', or a statement", n, negateSym)
 }
 
 func lexOperator(n byte, l *lexer) (lexemeType, statefn, error) {
@@ -146,10 +146,10 @@ func lexOperator(n byte, l *lexer) (lexemeType, statefn, error) {
 			return 0, nil, errors.New("unexpected closing parenthesis: no corresponding opening parenthesis")
 		}
 		return LTCloseParen, lexOperator, nil
-	case AND, OR, XOR, Conditional, BiConditional:
+	case andSym, orSym, xorSym, condSym, bicondSym:
 		l.allowEOF = false
 		return LTOperator, lexStatement, nil
 	}
 	return 0, nil, fmt.Errorf("unexpected char '%c'; expected ')', '%c', '%c', '%c', '%c', or '%c'",
-		n, AND, OR, XOR, Conditional, BiConditional)
+		n, andSym, orSym, xorSym, condSym, bicondSym)
 }
