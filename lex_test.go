@@ -8,7 +8,6 @@ func TestLex(t *testing.T) {
 		expected []lexeme
 	}
 	for _, c := range []testCase{
-		{"", []lexeme{}},
 		{"a", []lexeme{{LTStatement, 'a'}}},
 		{"a > b", []lexeme{
 			{LTStatement, 'a'},

@@ -64,7 +64,7 @@ func lex(input string) chan result {
 		input: removeAllWS(input),
 		// Arbitrary buffer size.
 		c:        make(chan result, 10),
-		allowEOF: true,
+		allowEOF: false,
 	}
 	go l.run()
 	return l.c
