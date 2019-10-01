@@ -9,6 +9,11 @@ func TestLex(t *testing.T) {
 	}
 	for _, c := range []testCase{
 		{"a", []lexeme{{LTStatement, 'a'}}},
+		{"(a)", []lexeme{
+			{LTOpenParen, '('},
+			{LTStatement, 'a'},
+			{LTCloseParen, ')'},
+		}},
 		{"a > b", []lexeme{
 			{LTStatement, 'a'},
 			{LTOperator, '>'},
@@ -55,6 +60,38 @@ func TestLex(t *testing.T) {
 				t.Fatalf("expected %v; got %v", c.expected[idx], r.l)
 			}
 			idx++
+		}
+	}
+}
+
+func TestLexError(t *testing.T) {
+	type testCase struct {
+		input string
+		error bool
+	}
+	for _, c := range []testCase{
+		{"", true},
+		{"()", true},
+		{">", true},
+		{"(=)", true},
+		{"(", true},
+		{")", true},
+		{"a >", true},
+		{"^ a", true},
+		{"(a & b > c)", false},
+	} {
+		err := false
+		for r := range lex(c.input) {
+			if r.err != nil {
+				err = true
+			}
+		}
+		if err != c.error {
+			fill := ""
+			if !c.error {
+				fill = "not "
+			}
+			t.Fatalf("expected '%s' to %serror", c.input, fill)
 		}
 	}
 }
