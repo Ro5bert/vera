@@ -7,6 +7,8 @@ import (
 	"unicode"
 )
 
+// TODO: restrict access to other packages
+
 const (
 	negateSym = '!'
 	andSym    = '&'

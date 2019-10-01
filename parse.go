@@ -66,7 +66,15 @@ func newTruth(atomics uint64) truth {
 type operator func(bool, bool) bool
 
 type stmt interface {
+	fmt.Stringer
 	eval(truth) bool
+}
+
+func surroundIfBinary(s stmt) string {
+	if _, ok := s.(binaryStmt); ok {
+		return "(" + s.String() + ")"
+	}
+	return s.String()
 }
 
 type falseStmt struct{}
@@ -75,10 +83,18 @@ func (falseStmt) eval(truth) bool {
 	return false
 }
 
+func (falseStmt) String() string {
+	return "0"
+}
+
 type trueStmt struct{}
 
 func (trueStmt) eval(truth) bool {
 	return true
+}
+
+func (trueStmt) String() string {
+	return "1"
 }
 
 type negatedStmt struct {
@@ -89,20 +105,33 @@ func (s negatedStmt) eval(t truth) bool {
 	return !s.stmt.eval(t)
 }
 
+func (s negatedStmt) String() string {
+	return "!" + surroundIfBinary(s.stmt)
+}
+
 type atomicStmt byte
 
 func (s atomicStmt) eval(t truth) bool {
 	return t.get(byte(s))
 }
 
+func (s atomicStmt) String() string {
+	return string(s)
+}
+
 type binaryStmt struct {
 	left  stmt
 	op    operator
 	right stmt
+	opSym string
 }
 
 func (s binaryStmt) eval(t truth) bool {
 	return s.op(s.left.eval(t), s.right.eval(t))
+}
+
+func (s binaryStmt) String() string {
+	return surroundIfBinary(s.left) + s.opSym + surroundIfBinary(s.right)
 }
 
 func and(left bool, right bool) bool {
@@ -178,6 +207,7 @@ func parseRecursive(c chan lexerResult) (stmt, uint64, error) {
 	// op in the outer invocation of parseRecursive will be set to the AND operator, and the op in the inner invocation
 	// of parseRecursive (i.e. when parsing '(b)') will be nil.
 	var op operator
+	var opSym string
 	// atomics is a bit field where a set bit indicates that the corresponding atomic statement (i.e. an ascii letter)
 	// appeared in the input. Whether 'A' occurred in the input is 'atomics & 1', and whether 'z' occurred in the input
 	// is 'atomics & 1 << 51', for example.
@@ -203,6 +233,7 @@ forLoop:
 			case LTTrue:
 				pick().inner = trueStmt{}
 			case LTNegate:
+				// TODO: try to preserve original statement as faithfully as possible: increment negate counter instead?
 				pick().negate()
 				// continue so state is not set below the switch statement.
 				continue
@@ -230,6 +261,7 @@ forLoop:
 			switch lr.l.t {
 			case LTOperator:
 				op = byteToOp(lr.l.v)
+				opSym = " " + string(lr.l.v) + " "
 				state = expStmt
 			case LTCloseParen:
 				break forLoop
@@ -249,5 +281,5 @@ forLoop:
 	if op == nil {
 		return left.build(), atomics, nil
 	}
-	return binaryStmt{left.build(), op, right.build()}, atomics, nil
+	return binaryStmt{left.build(), op, right.build(), opSym}, atomics, nil
 }

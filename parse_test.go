@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestParse(t *testing.T) {
+func TestParseEval(t *testing.T) {
 	type testCase struct {
 		input    string
 		expected []bool
@@ -34,6 +34,32 @@ func TestParse(t *testing.T) {
 				t.Fatalf("expected %t for evalation of '%s' at %s", exp, c.input, truth)
 			}
 			truth.val++
+		}
+	}
+}
+
+func TestParseStmtToString(t *testing.T) {
+	type testCase struct {
+		input    string
+		expected string
+	}
+	for _, c := range []testCase{
+		{"a", "a"},
+		{"(a)", "a"},
+		{"!a", "!a"},
+		{"(!a)", "!a"},
+		{"!(a)", "!a"},
+		{"a&b", "a & b"},
+		{"(a&b)>c", "(a & b) > c"},
+		{"(a&!0)>!!1", "(a & !0) > 1"},
+	} {
+		stmt, _, err := parse(c.input)
+		if err != nil {
+			t.Fatalf("error occurred while parsing: %v (input: %s)", err, c.input)
+		}
+		stmtStr := stmt.String()
+		if stmtStr != c.expected {
+			t.Fatalf("expected %s; got %s (input: %s)", c.expected, stmtStr, c.input)
 		}
 	}
 }
