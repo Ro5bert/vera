@@ -33,7 +33,7 @@ type lexeme struct {
 	v byte
 }
 
-type result struct {
+type lexerResult struct {
 	l   lexeme
 	err error
 }
@@ -42,7 +42,7 @@ type statefn func(byte, *lexer) (lexemeType, statefn, error)
 
 type lexer struct {
 	input    string
-	c        chan result
+	c        chan lexerResult
 	nextIdx  int
 	nestCnt  int
 	allowEOF bool
@@ -59,11 +59,11 @@ func removeAllWS(str string) string {
 	return b.String()
 }
 
-func lex(input string) chan result {
+func lex(input string) chan lexerResult {
 	l := &lexer{
 		input: removeAllWS(input),
 		// Arbitrary buffer size.
-		c:        make(chan result, 10),
+		c:        make(chan lexerResult, 10),
 		allowEOF: false,
 	}
 	go l.run()
@@ -75,7 +75,7 @@ func (l *lexer) run() {
 		n, eof := l.next()
 		if eof {
 			if !l.allowEOF {
-				l.c <- result{err: errors.New("unexpected EOF")}
+				l.c <- lexerResult{err: errors.New("unexpected EOF")}
 			}
 			break
 		}
@@ -83,10 +83,10 @@ func (l *lexer) run() {
 		var err error
 		lt, sfn, err = sfn(n, l)
 		if err != nil {
-			l.c <- result{err: err}
+			l.c <- lexerResult{err: err}
 			break
 		}
-		l.c <- result{l: lexeme{lt, n}}
+		l.c <- lexerResult{l: lexeme{lt, n}}
 	}
 	// Closing the channel without any errors implies EOF.
 	close(l.c)
