@@ -2,20 +2,30 @@ package vera
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"unicode"
+)
+
+const (
+	Negate        = '!'
+	AND           = '&'
+	OR            = '|'
+	XOR           = '^'
+	Conditional   = '>'
+	BiConditional = '='
 )
 
 type lexemeType byte
 
 const (
-	False lexemeType = iota
-	True
-	Negate
-	Operator
-	OpenParen
-	CloseParen
-	Statement
+	LTFalse lexemeType = iota
+	LTTrue
+	LTNegate
+	LTOperator
+	LTOpenParen
+	LTCloseParen
+	LTStatement
 )
 
 type lexeme struct {
@@ -53,7 +63,7 @@ func lex(input string) chan result {
 	l := &lexer{
 		input: removeAllWS(input),
 		// Arbitrary buffer size.
-		c: make(chan result, 10),
+		c:        make(chan result, 10),
 		allowEOF: true,
 	}
 	go l.run()
@@ -112,21 +122,21 @@ func lexStatement(n byte, l *lexer) (lexemeType, statefn, error) {
 	// Some branches in the below switch set the allowEOF flag based on other conditions.
 	l.allowEOF = l.nestCnt == 0
 	switch n {
-	case '!':
+	case Negate:
 		l.allowEOF = false
-		return Negate, lexStatement, nil
+		return LTNegate, lexStatement, nil
 	case '(':
 		l.nest()
-		return OpenParen, lexStatement, nil
+		return LTOpenParen, lexStatement, nil
 	case '0':
-		return False, lexOperator, nil
+		return LTFalse, lexOperator, nil
 	case '1':
-		return True, lexOperator, nil
+		return LTTrue, lexOperator, nil
 	}
 	if ('a' <= n && n <= 'z') || ('A' <= n && n <= 'Z') {
-		return Statement, lexOperator, nil
+		return LTStatement, lexOperator, nil
 	}
-	return 0, nil, errors.New("unexpected char '%c'; expected '!', '(', '0', '1', or a statement")
+	return 0, nil, fmt.Errorf("unexpected char '%c'; expected '%c', '(', '0', '1', or a statement", n, Negate)
 }
 
 func lexOperator(n byte, l *lexer) (lexemeType, statefn, error) {
@@ -135,10 +145,11 @@ func lexOperator(n byte, l *lexer) (lexemeType, statefn, error) {
 		if !l.denest() {
 			return 0, nil, errors.New("unexpected closing parenthesis: no corresponding opening parenthesis")
 		}
-		return CloseParen, lexOperator, nil
-	case '&', '|', '^', '>', '=':
+		return LTCloseParen, lexOperator, nil
+	case AND, OR, XOR, Conditional, BiConditional:
 		l.allowEOF = false
-		return Operator, lexStatement, nil
+		return LTOperator, lexStatement, nil
 	}
-	return 0, nil, errors.New("unexpected char '%c'; expected ')', '&', '|', '^', '>', or '='")
+	return 0, nil, fmt.Errorf("unexpected char '%c'; expected ')', '%c', '%c', '%c', '%c', or '%c'",
+		n, AND, OR, XOR, Conditional, BiConditional)
 }
