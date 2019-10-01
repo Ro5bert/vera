@@ -18,6 +18,27 @@ const (
 
 type lexemeType byte
 
+func (lt lexemeType) String() string {
+	switch lt {
+	case LTFalse:
+		return "False"
+	case LTTrue:
+		return "True"
+	case LTNegate:
+		return "Negate"
+	case LTOperator:
+		return "Operator"
+	case LTOpenParen:
+		return "OpenParen"
+	case LTCloseParen:
+		return "CloseParen"
+	case LTStatement:
+		return "Statement"
+	default:
+		panic("lexemeType not added to String method!")
+	}
+}
+
 const (
 	LTFalse lexemeType = iota
 	LTTrue
