@@ -25,15 +25,15 @@ func TestParseEval(t *testing.T) {
 		{"!!(a = b)", []bool{true, false, false, true}},
 		{"(a = b) | b", []bool{true, false, true, true}},
 	} {
-		stmt, truth, err := parse(c.input)
+		stmt, truth, err := Parse(c.input)
 		if err != nil {
 			t.Fatalf("error occurred while parsing: %v (input: %s)", err, c.input)
 		}
 		for _, exp := range c.expected {
-			if stmt.eval(truth) != exp {
+			if stmt.Eval(truth) != exp {
 				t.Fatalf("expected %t for evalation of '%s' at %s", exp, c.input, truth)
 			}
-			truth.val++
+			truth.Val++
 		}
 	}
 }
@@ -53,7 +53,7 @@ func TestParseStmtToString(t *testing.T) {
 		{"(a&b)>c", "(a & b) > c"},
 		{"(a&!0)>!!1", "(a & !0) > 1"},
 	} {
-		stmt, _, err := parse(c.input)
+		stmt, _, err := Parse(c.input)
 		if err != nil {
 			t.Fatalf("error occurred while parsing: %v (input: %s)", err, c.input)
 		}

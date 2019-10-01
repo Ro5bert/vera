@@ -19,20 +19,20 @@ func idxToAlpha(idx byte) byte {
 	return idx + 65
 }
 
-type truth struct {
-	val      uint64
+type Truth struct {
+	Val      uint64
 	shiftMap *[52]byte
-	names    []byte
+	Names    []byte
 }
 
-func (t truth) get(stmt byte) bool {
-	return t.val&(1<<t.shiftMap[alphaToIdx(stmt)]) > 0
+func (t Truth) get(stmt byte) bool {
+	return t.Val&(1<<t.shiftMap[alphaToIdx(stmt)]) > 0
 }
 
-func (t truth) String() string {
+func (t Truth) String() string {
 	var sb strings.Builder
 	sb.WriteByte('{')
-	for i, b := range t.names {
+	for i, b := range t.Names {
 		sb.WriteByte(b)
 		sb.WriteByte(':')
 		if t.get(b) {
@@ -40,7 +40,7 @@ func (t truth) String() string {
 		} else {
 			sb.WriteByte('0')
 		}
-		if i < len(t.names)-1 {
+		if i < len(t.Names)-1 {
 			sb.WriteByte(',')
 		}
 	}
@@ -48,7 +48,7 @@ func (t truth) String() string {
 	return sb.String()
 }
 
-func newTruth(atomics uint64) truth {
+func newTruth(atomics uint64) Truth {
 	var shiftMap [52]byte
 	names := make([]byte, 0, 52)
 	var shift byte
@@ -60,17 +60,17 @@ func newTruth(atomics uint64) truth {
 			names = append(names, idxToAlpha(i))
 		}
 	}
-	return truth{0, &shiftMap, names}
+	return Truth{0, &shiftMap, names}
 }
 
 type operator func(bool, bool) bool
 
-type stmt interface {
+type Stmt interface {
 	fmt.Stringer
-	eval(truth) bool
+	Eval(Truth) bool
 }
 
-func surroundIfBinary(s stmt) string {
+func surroundIfBinary(s Stmt) string {
 	if _, ok := s.(binaryStmt); ok {
 		return "(" + s.String() + ")"
 	}
@@ -79,7 +79,7 @@ func surroundIfBinary(s stmt) string {
 
 type falseStmt struct{}
 
-func (falseStmt) eval(truth) bool {
+func (falseStmt) Eval(Truth) bool {
 	return false
 }
 
@@ -89,7 +89,7 @@ func (falseStmt) String() string {
 
 type trueStmt struct{}
 
-func (trueStmt) eval(truth) bool {
+func (trueStmt) Eval(Truth) bool {
 	return true
 }
 
@@ -98,20 +98,20 @@ func (trueStmt) String() string {
 }
 
 type negatedStmt struct {
-	stmt
+	Stmt
 }
 
-func (s negatedStmt) eval(t truth) bool {
-	return !s.stmt.eval(t)
+func (s negatedStmt) Eval(t Truth) bool {
+	return !s.Stmt.Eval(t)
 }
 
 func (s negatedStmt) String() string {
-	return "!" + surroundIfBinary(s.stmt)
+	return "!" + surroundIfBinary(s.Stmt)
 }
 
 type atomicStmt byte
 
-func (s atomicStmt) eval(t truth) bool {
+func (s atomicStmt) Eval(t Truth) bool {
 	return t.get(byte(s))
 }
 
@@ -120,14 +120,14 @@ func (s atomicStmt) String() string {
 }
 
 type binaryStmt struct {
-	left  stmt
+	left  Stmt
 	op    operator
-	right stmt
+	right Stmt
 	opSym string
 }
 
-func (s binaryStmt) eval(t truth) bool {
-	return s.op(s.left.eval(t), s.right.eval(t))
+func (s binaryStmt) Eval(t Truth) bool {
+	return s.op(s.left.Eval(t), s.right.Eval(t))
 }
 
 func (s binaryStmt) String() string {
@@ -172,13 +172,13 @@ func byteToOp(b byte) operator {
 	}
 }
 
-func parse(input string) (stmt, truth, error) {
+func Parse(input string) (Stmt, Truth, error) {
 	stmt, atomics, err := parseRecursive(lex(input))
 	return stmt, newTruth(atomics), err
 }
 
 type stmtBuilder struct {
-	inner   stmt
+	inner   Stmt
 	negated bool
 }
 
@@ -186,14 +186,14 @@ func (sb *stmtBuilder) negate() {
 	sb.negated = !sb.negated
 }
 
-func (sb *stmtBuilder) build() stmt {
+func (sb *stmtBuilder) build() Stmt {
 	if sb.negated {
 		return negatedStmt{sb.inner}
 	}
 	return sb.inner
 }
 
-func parseRecursive(c chan lexerResult) (stmt, uint64, error) {
+func parseRecursive(c chan lexerResult) (Stmt, uint64, error) {
 	const (
 		expStmt = iota
 		expOpOrClose
@@ -228,16 +228,16 @@ forLoop:
 		switch state {
 		case expStmt:
 			switch lr.l.t {
-			case LTFalse:
+			case ltFalse:
 				pick().inner = falseStmt{}
-			case LTTrue:
+			case ltTrue:
 				pick().inner = trueStmt{}
-			case LTNegate:
+			case ltNegate:
 				// TODO: try to preserve original statement as faithfully as possible: increment negate counter instead?
 				pick().negate()
 				// continue so state is not set below the switch statement.
 				continue
-			case LTOpenParen:
+			case ltOpenParen:
 				var err error
 				var a uint64
 				pick().inner, a, err = parseRecursive(c)
@@ -245,7 +245,7 @@ forLoop:
 					return nil, 0, err
 				}
 				atomics |= a
-			case LTStatement:
+			case ltStatement:
 				atomics |= 1 << alphaToIdx(lr.l.v)
 				pick().inner = atomicStmt(lr.l.v)
 			default:
@@ -259,19 +259,19 @@ forLoop:
 			}
 		case expOpOrClose:
 			switch lr.l.t {
-			case LTOperator:
+			case ltOperator:
 				op = byteToOp(lr.l.v)
 				opSym = " " + string(lr.l.v) + " "
 				state = expStmt
-			case LTCloseParen:
+			case ltCloseParen:
 				break forLoop
 			default:
 				// Lexer should guarantee this never happens.
 				panic(fmt.Sprintf("expected Operator or CloseParen/EOF, not %s", lr.l.t))
 			}
 		case expClose:
-			if lr.l.t != LTCloseParen {
-				// This should only ever happen if the lexeme is of type LTOperator, since the lexer does not understand
+			if lr.l.t != ltCloseParen {
+				// This should only ever happen if the lexeme is of type ltOperator, since the lexer does not understand
 				// that multiple operators chained together without parentheses is ambiguous.
 				return nil, 0, fmt.Errorf("expected CloseParen/EOF, not %s", lr.l.t)
 			}

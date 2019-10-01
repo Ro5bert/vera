@@ -7,8 +7,6 @@ import (
 	"unicode"
 )
 
-// TODO: restrict access to other packages
-
 const (
 	negateSym = '!'
 	andSym    = '&'
@@ -22,19 +20,19 @@ type lexemeType byte
 
 func (lt lexemeType) String() string {
 	switch lt {
-	case LTFalse:
+	case ltFalse:
 		return "False"
-	case LTTrue:
+	case ltTrue:
 		return "True"
-	case LTNegate:
+	case ltNegate:
 		return "Negate"
-	case LTOperator:
+	case ltOperator:
 		return "Operator"
-	case LTOpenParen:
+	case ltOpenParen:
 		return "OpenParen"
-	case LTCloseParen:
+	case ltCloseParen:
 		return "CloseParen"
-	case LTStatement:
+	case ltStatement:
 		return "Statement"
 	default:
 		panic("lexemeType not added to String method!")
@@ -42,13 +40,13 @@ func (lt lexemeType) String() string {
 }
 
 const (
-	LTFalse lexemeType = iota
-	LTTrue
-	LTNegate
-	LTOperator
-	LTOpenParen
-	LTCloseParen
-	LTStatement
+	ltFalse lexemeType = iota
+	ltTrue
+	ltNegate
+	ltOperator
+	ltOpenParen
+	ltCloseParen
+	ltStatement
 )
 
 type lexeme struct {
@@ -147,17 +145,17 @@ func lexStatement(n byte, l *lexer) (lexemeType, statefn, error) {
 	switch n {
 	case negateSym:
 		l.allowEOF = false
-		return LTNegate, lexStatement, nil
+		return ltNegate, lexStatement, nil
 	case '(':
 		l.nest()
-		return LTOpenParen, lexStatement, nil
+		return ltOpenParen, lexStatement, nil
 	case '0':
-		return LTFalse, lexOperator, nil
+		return ltFalse, lexOperator, nil
 	case '1':
-		return LTTrue, lexOperator, nil
+		return ltTrue, lexOperator, nil
 	}
 	if ('a' <= n && n <= 'z') || ('A' <= n && n <= 'Z') {
-		return LTStatement, lexOperator, nil
+		return ltStatement, lexOperator, nil
 	}
 	return 0, nil, fmt.Errorf("unexpected char '%c'; expected '%c', '(', '0', '1', or a statement", n, negateSym)
 }
@@ -168,10 +166,10 @@ func lexOperator(n byte, l *lexer) (lexemeType, statefn, error) {
 		if !l.denest() {
 			return 0, nil, errors.New("unexpected closing parenthesis: no corresponding opening parenthesis")
 		}
-		return LTCloseParen, lexOperator, nil
+		return ltCloseParen, lexOperator, nil
 	case andSym, orSym, xorSym, condSym, bicondSym:
 		l.allowEOF = false
-		return LTOperator, lexStatement, nil
+		return ltOperator, lexStatement, nil
 	}
 	return 0, nil, fmt.Errorf("unexpected char '%c'; expected ')', '%c', '%c', '%c', '%c', or '%c'",
 		n, andSym, orSym, xorSym, condSym, bicondSym)
