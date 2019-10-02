@@ -18,7 +18,7 @@ var ttCmd = &cobra.Command{
 }
 
 func init() {
-	ttCmd.Flags().Bool("no-color", false, "colorize the output")
+	ttCmd.Flags().Bool("no-color", false, "do not colorize the output")
 	ttCmd.Flags().Bool("ascii", false, "use ASCII characters to draw the table")
 	rootCmd.AddCommand(ttCmd)
 }
