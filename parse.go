@@ -25,6 +25,8 @@ type Truth struct {
 	Names    []byte
 }
 
+// TODO: fix (reverse) shift mapping
+
 func (t Truth) get(stmt byte) bool {
 	return t.Val&(1<<t.shiftMap[alphaToIdx(stmt)]) > 0
 }
