@@ -59,6 +59,7 @@ type lexerResult struct {
 	err error
 }
 
+// statefn is a state combined with an associated action. See Rob Pike's talk on lexical scanning.
 type statefn func(byte, *lexer) (lexemeType, statefn, error)
 
 type lexer struct {
@@ -69,6 +70,8 @@ type lexer struct {
 	allowEOF bool
 }
 
+// removeAllWS removes all the whitespace from a string and returns the new string, where whitespace is identified
+// according to unicode.IsSpace.
 func removeAllWS(str string) string {
 	var b strings.Builder
 	b.Grow(len(str))
@@ -80,6 +83,7 @@ func removeAllWS(str string) string {
 	return b.String()
 }
 
+// lex lexes the given string in a separate goroutine and outputs the resultant lexerResults over the returned channel.
 func lex(input string) chan lexerResult {
 	l := &lexer{
 		input: removeAllWS(input),
@@ -91,6 +95,7 @@ func lex(input string) chan lexerResult {
 	return l.c
 }
 
+// run is the main loop for a lexer. It should be called in a separate goroutine.
 func (l *lexer) run() {
 	for sfn := lexStatement; sfn != nil; {
 		n, eof := l.next()
@@ -113,6 +118,8 @@ func (l *lexer) run() {
 	close(l.c)
 }
 
+// next returns the next byte in the input string. The boolean return value indicates if the end of the string was
+// reached (i.e. EOF); if it is true, the byte return value should be disregarded.
 func (l *lexer) next() (byte, bool) {
 	if l.nextIdx == len(l.input) {
 		return 0, true
@@ -123,11 +130,14 @@ func (l *lexer) next() (byte, bool) {
 	return next, false
 }
 
+// nest increments nestCnt and sets allowEOF as appropriate.
 func (l *lexer) nest() {
 	l.nestCnt++
 	l.allowEOF = false
 }
 
+// denest decrements nestCnt and sets allowEOF as appropriate. The boolean return value indicates success; false is
+// returned if nestCnt was already zero when denest was called (i.e. parentheses not matched).
 func (l *lexer) denest() bool {
 	if l.nestCnt == 0 {
 		// false return indicates failure.
@@ -138,6 +148,8 @@ func (l *lexer) denest() bool {
 	return true
 }
 
+// lexStatement is a statefn for parsing the start of a statement (this includes opening parentheses, "0", "1", and
+// letters) or negation.
 func lexStatement(n byte, l *lexer) (lexemeType, statefn, error) {
 	// By default, allow EOF if there are no unmatched parentheses.
 	// Some branches in the below switch set the allowEOF flag based on other conditions.
@@ -160,6 +172,7 @@ func lexStatement(n byte, l *lexer) (lexemeType, statefn, error) {
 	return 0, nil, fmt.Errorf("unexpected char '%c'; expected '%c', '(', '0', '1', or a statement", n, negateSym)
 }
 
+// lexOperator is a statefn for parsing a binary operator or a closing parenthesis.
 func lexOperator(n byte, l *lexer) (lexemeType, statefn, error) {
 	switch n {
 	case ')':

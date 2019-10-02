@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// CharSet is a set of characters for rendering a table via RenderTT.
 type CharSet struct {
 	RowSep   string
 	ColSep   string
@@ -22,6 +23,7 @@ type CharSet struct {
 	BRCorner string
 }
 
+// PrettyBoxCS is a CharSet using Unicode box drawing characters.
 var PrettyBoxCS = &CharSet{
 	RowSep:   "─",
 	ColSep:   "│",
@@ -36,6 +38,7 @@ var PrettyBoxCS = &CharSet{
 	BRCorner: "┘",
 }
 
+// ASCIIBoxCS is a CharSet using only ASCII characters.
 var ASCIIBoxCS = &CharSet{
 	RowSep:   "-",
 	ColSep:   "|",
@@ -51,6 +54,9 @@ var ASCIIBoxCS = &CharSet{
 }
 
 // TODO: improve customizability
+
+// RenderTT writes a truth table for the given Stmt/Truth pair to the given io.Writer. The appearance of the table is
+// dictated by the given CharSet and colorize parameter.
 func RenderTT(stmt Stmt, truth Truth, out io.Writer, cs *CharSet, colorize bool) error {
 	color.NoColor = !colorize
 	if len(truth.Names) == 0 {
@@ -79,18 +85,22 @@ func RenderTT(stmt Stmt, truth Truth, out io.Writer, cs *CharSet, colorize bool)
 	return nil
 }
 
+// printTopLine draws the top line in the table (i.e. above the header).
 func printTopLine(nAtomics int, outputWidth int, out io.Writer, cs *CharSet) error {
 	return printLine(nAtomics, outputWidth, out, cs.RowSep, cs.TLCorner, cs.TopT, cs.TRCorner)
 }
 
+// printHeaderLine draws the line between the header and the data in the table.
 func printHeaderLine(nAtomics int, outputWidth int, out io.Writer, cs *CharSet) error {
 	return printLine(nAtomics, outputWidth, out, cs.RowSep, cs.LeftT, cs.Center, cs.RightT)
 }
 
+// printBottomLine draws the bottom line in the table (i.e. below the data).
 func printBottomLine(nAtomics int, outputWidth int, out io.Writer, cs *CharSet) error {
 	return printLine(nAtomics, outputWidth, out, cs.RowSep, cs.BLCorner, cs.BottomT, cs.BRCorner)
 }
 
+// calcInputWidth calculates the total width of all the input columns given the number of atomic statements.
 func calcInputWidth(nAtomics int) int {
 	return nAtomics + 2*(nAtomics-1)
 }
@@ -106,6 +116,8 @@ func printLine(nAtomics int, outputWidth int, out io.Writer, rowSep string, l st
 	return err
 }
 
+// printHeader prints the header, consisting of the names of the atomic statements and a nicely-formatted version of the
+// original input statement.
 func printHeader(atomics []byte, stmt string, out io.Writer, cs *CharSet) error {
 	var sb strings.Builder
 	sb.Grow(calcInputWidth(len(atomics)))
@@ -118,11 +130,13 @@ func printHeader(atomics []byte, stmt string, out io.Writer, cs *CharSet) error 
 	return printRow(sb.String(), stmt, out, cs)
 }
 
+// centerText centers the given ASCII string in spaces such that the returned string has length >= width.
 func centerText(text string, width int) string {
 	// Assumes text is ASCII.
 	return fmt.Sprintf("%[1]*s", -width, fmt.Sprintf("%[1]*s", (width+len(text))/2, text))
 }
 
+// printData prints a single row of truth values and their associated output.
 func printData(truth uint64, nAtomics int, output bool, outputWidth int, out io.Writer, cs *CharSet) error {
 	var sb strings.Builder
 	for i := nAtomics - 1; i >= 0; i-- {

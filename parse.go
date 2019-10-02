@@ -1,3 +1,4 @@
+// vera is a package for parsing logical expressions.
 package vera
 
 import (
@@ -5,6 +6,8 @@ import (
 	"strings"
 )
 
+// alphaToIdx maps the given byte corresponding to an English letter to the range [0, 51] (e.g 'A' is mapped to 0 and
+// 'z' is mapped to 51).
 func alphaToIdx(ascii byte) byte {
 	if ascii >= 'a' {
 		ascii -= 6
@@ -12,6 +15,7 @@ func alphaToIdx(ascii byte) byte {
 	return ascii - 65
 }
 
+// idxToAlpha does the reverse of alphaToIdx.
 func idxToAlpha(idx byte) byte {
 	if idx >= 26 {
 		idx += 6
@@ -19,12 +23,30 @@ func idxToAlpha(idx byte) byte {
 	return idx + 65
 }
 
+// Truth represents a set of truth values.
+// The truth values are represented by Val, which is treated like a bit field where each bit represents whether the
+// corresponding atomic statement is true (1) or false (0). The bits are in alphabetical order such that, if all 52
+// atomic statements are used, the 0th bit corresponds to 'z' and the 51st bit corresponds to 'A'. However, if some of
+// the 52 possible atomic statements are not used, they will not be included in the bit field (e.g if only 'a' and 'G'
+// are used, the 0th bit will correspond to 'a' and the 1st bit will correspond to 'G'; the remaining bits are
+// meaningless).
+// As a result of the truth values being represented as a uint64, it is very easy to iterate over all possible truth
+// values for a statement; for example:
+// 		stmt, t, err := vera.Parse(...)
+//		// check err
+// 		for t.Val = 0; t.Val < 1 << len(t.Names); t.Val++ {
+//			// Do something with t such as call stmt.Eval.
+//		}
+// If the names associated with each bit value are needed, they are stored in the Names slice which uses the same
+// indexing scheme as the bits in Val (e.g. t.Val&(1<<i)>0 accesses the value of the statement named t.Names[i] for some
+// Truth t and integer i < len(t.Names)).
 type Truth struct {
 	Val      uint64
 	shiftMap *[52]byte
 	Names    []byte
 }
 
+// get returns the value of the given atomic statement for this set of truth values.
 func (t Truth) get(stmt byte) bool {
 	return t.Val&(1<<t.shiftMap[alphaToIdx(stmt)]) > 0
 }
@@ -68,6 +90,7 @@ func newTruth(atomics uint64) Truth {
 	return Truth{0, &shiftMap, names}
 }
 
+// operator represents a binary logical operator.
 type operator func(bool, bool) bool
 
 type Stmt interface {
@@ -75,6 +98,8 @@ type Stmt interface {
 	Eval(Truth) bool
 }
 
+// surroundIfBinary returns the string representation of the given Stmt and surrounds it in parentheses if it is a
+// binaryStmt.
 func surroundIfBinary(s Stmt) string {
 	if _, ok := s.(binaryStmt); ok {
 		return "(" + s.String() + ")"
@@ -159,6 +184,7 @@ func bicond(left bool, right bool) bool {
 	return left == right
 }
 
+// byteToOp takes an operator symbol in the form of a byte and returns the associated operator function.
 func byteToOp(b byte) operator {
 	switch b {
 	case andSym:
@@ -177,11 +203,14 @@ func byteToOp(b byte) operator {
 	}
 }
 
+// Parse parses the given input string, returning a Stmt which can then be evaluated at certain sets of truth values
+// using the given Truth. An error is also returned in the case of failure.
 func Parse(input string) (Stmt, Truth, error) {
 	stmt, atomics, err := parseRecursive(lex(input))
 	return stmt, newTruth(atomics), err
 }
 
+// stmtBuilder is used internally inside parseRecursive to manage negations.
 type stmtBuilder struct {
 	inner   Stmt
 	negated bool
