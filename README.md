@@ -33,7 +33,7 @@ cd $(go env GOPATH)/src/github.com/Ro5bert/vera/cli && go build -o vera main.go
   
 ### Sample CLI Output
 
-<pre>
+<!--<pre>
 $ vera tt 'p & 0'
 ┌─┬─────┐
 │p│p &amp; 0│
@@ -66,5 +66,6 @@ $ vera tt '!!!(p>q)|r'
 │<font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>  <font style="color:#CC0000">0</font>│<font style="color:#CC0000">     0      </font>│
 │<font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>│<font style="color:#4E9A06">     1      </font>│
 └───────┴────────────┘
-</pre>
+</pre>-->
 
+![Sample CLI Output](sampleCLIOutput.png)
