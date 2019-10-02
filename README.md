@@ -69,3 +69,18 @@ $ vera tt '!!!(p>q)|r'
 </pre>-->
 
 <img src="sampleCLIOutput.png" alt="Sample CLI Output" width="300" />
+
+### Use as a Library Example
+
+```go
+// Assuming "github.com/Ro5bert/vera" is imported
+
+stmt, truth, err := vera.Parse("a > b")
+if err != nil {
+    // handle error
+}
+// Iterate over all sets of truth values and print out the stmt evaluated at each set:
+for ; truth.Val < (1 << len(truth.Names)); truth.Val++ {
+    fmt.Println(stmt.Eval(truth))
+}
+```
