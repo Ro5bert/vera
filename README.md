@@ -68,4 +68,4 @@ $ vera tt '!!!(p>q)|r'
 └───────┴────────────┘
 </pre>-->
 
-![Sample CLI Output](sampleCLIOutput.png)
+<img src="sampleCLIOutput.png" alt="Sample CLI Output" width="300" />
