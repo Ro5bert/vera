@@ -14,7 +14,7 @@ cd $(go env GOPATH)/src/github.com/Ro5bert/vera/cli && go build -o vera main.go
 <tr> <td><code>0</code></td> <td>False</td> </tr>
 <tr> <td><code>1</code></td> <td>True</td> </tr>
 <tr> <td><code>a</code>-<code>z</code>, <code>A</code>-<code>Z</code></td> <td>Statement</td> </tr>
-<tr> <td><code>(...)</code></td> <td></td> </tr>
+<tr> <td><code>(...)</code></td> <td>Grouping/explicit binary operator precedence</td> </tr>
 <tr> <td><code>!</code></td> <td>Negate</td> </tr>
 <tr> <td><code>&</code></td> <td>AND</td> </tr>
 <tr> <td><code>|</code></td> <td>OR</td> </tr>
