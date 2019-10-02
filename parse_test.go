@@ -15,15 +15,15 @@ func TestParseEval(t *testing.T) {
 		{"a&b", []bool{false, false, false, true}},
 		{"a|b", []bool{false, true, true, true}},
 		{"a^b", []bool{false, true, true, false}},
-		{"a>b", []bool{true, false, true, true}},
+		{"a>b", []bool{true, true, false, true}},
 		{"a=b", []bool{true, false, false, true}},
 		{"0", []bool{false}},
 		{"1", []bool{true}},
 		{"a|!0", []bool{true, true}},
 		{"(a & b)", []bool{false, false, false, true}},
-		{"!(a > b)", []bool{false, true, false, false}},
+		{"!(a > b)", []bool{false, false, true, false}},
 		{"!!(a = b)", []bool{true, false, false, true}},
-		{"(a = b) | b", []bool{true, false, true, true}},
+		{"(a = b) | b", []bool{true, true, false, true}},
 	} {
 		stmt, truth, err := Parse(c.input)
 		if err != nil {

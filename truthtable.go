@@ -95,9 +95,9 @@ func printLine(nAtomics int, outputWidth int, out io.Writer, rowSep string, l st
 func printHeader(atomics []byte, stmt string, out io.Writer, cs *CharSet) error {
 	var sb strings.Builder
 	sb.Grow(calcInputWidth(len(atomics)))
-	for i, a := range atomics {
-		sb.WriteByte(a)
-		if i < len(atomics)-1 {
+	for i := len(atomics) - 1; i >= 0; i-- {
+		sb.WriteByte(atomics[i])
+		if i > 0 {
 			sb.WriteString("  ")
 		}
 	}
@@ -113,9 +113,9 @@ func colourize(val bool) string {
 
 func printData(truth uint64, nAtomics int, output bool, outputWidth int, out io.Writer, cs *CharSet) error {
 	var sb strings.Builder
-	for i := 0; i < nAtomics; i++ {
+	for i := nAtomics - 1; i >= 0; i-- {
 		sb.WriteString(colourize(truth&(1<<i) > 0))
-		if i < nAtomics-1 {
+		if i > 0 {
 			sb.WriteString("  ")
 		}
 	}

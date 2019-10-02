@@ -25,8 +25,6 @@ type Truth struct {
 	Names    []byte
 }
 
-// TODO: fix (reverse) shift mapping
-
 func (t Truth) get(stmt byte) bool {
 	return t.Val&(1<<t.shiftMap[alphaToIdx(stmt)]) > 0
 }
@@ -54,7 +52,12 @@ func newTruth(atomics uint64) Truth {
 	var shiftMap [52]byte
 	names := make([]byte, 0, 52)
 	var shift byte
-	for i := byte(0); i < 52; i++ {
+	// Here we count down from 51 instead of up from 0 to effectively reverse the bit order in Truth.Val.
+	// This allows us to display each atomic in alphabetical order in a truth table and not have the rows "appear
+	// backwards" (e.g. {0-0, 1-0, 0-1, 1-1} instead of {0-0, 0-1, 1-0, 1-1}) yet still be able to count up by simply
+	// incrementing Truth.Val.
+	// Less than 52 in condition because of wrap around.
+	for i := byte(51); i < 52; i-- {
 		if atomics&(1<<i) > 0 {
 			shiftMap[i] = shift
 			shift++
