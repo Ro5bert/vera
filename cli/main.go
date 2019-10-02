@@ -19,6 +19,7 @@ var ttCmd = &cobra.Command{
 
 func init() {
 	ttCmd.Flags().Bool("no-color", false, "colorize the output")
+	ttCmd.Flags().Bool("ascii", false, "use ASCII characters to draw the table")
 	rootCmd.AddCommand(ttCmd)
 }
 
@@ -32,16 +33,21 @@ func main() {
 func tt(cmd *cobra.Command, args []string) error {
 	nocolor, err := cmd.Flags().GetBool("no-color")
 	if err != nil {
-		// This should never happen.
+		panic(err)
+	}
+	ascii, err := cmd.Flags().GetBool("ascii")
+	if err != nil {
 		panic(err)
 	}
 	stmt, truth, err := vera.Parse(args[0])
 	if err != nil {
 		return err
 	}
-	err = vera.RenderTT(stmt, truth, os.Stdout, vera.PrettyBoxCS, !nocolor)
-	if err != nil {
-		return err
+	var cs *vera.CharSet
+	if ascii {
+		cs = vera.ASCIIBoxCS
+	} else {
+		cs = vera.PrettyBoxCS
 	}
-	return nil
+	return vera.RenderTT(stmt, truth, os.Stdout, cs, !nocolor)
 }

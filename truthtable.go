@@ -36,6 +36,20 @@ var PrettyBoxCS = &CharSet{
 	BRCorner: "┘",
 }
 
+var ASCIIBoxCS = &CharSet{
+	RowSep:   "-",
+	ColSep:   "|",
+	Center:   "+",
+	TopT:     "+",
+	BottomT:  "+",
+	LeftT:    "+",
+	RightT:   "+",
+	TLCorner: "+",
+	TRCorner: "+",
+	BLCorner: "+",
+	BRCorner: "+",
+}
+
 // TODO: improve customizability
 func RenderTT(stmt Stmt, truth Truth, out io.Writer, cs *CharSet, colorize bool) error {
 	color.NoColor = !colorize
