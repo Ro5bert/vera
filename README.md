@@ -25,7 +25,8 @@ cd $(go env GOPATH)/src/github.com/Ro5bert/vera/cli && go build -o vera main.go
 
 ### Limitations
 
-- There is a maximum of 52 atomic statements (26 lowercase letters + 26 uppercase letter = 52).
+- There is a maximum of 52 atomic statements (26 lowercase letters + 26 uppercase letter = 52). (Although, I am not sure
+  why or how you would have 52 atomic statements... performance is O(2<sup>n</sup>) where n is number of atomic statements).
 - To avoid subjectivity in operator precedence, all binary operators are assigned equal precedence and must be
   parenthesized as necessary (even if the operators are all AND, for example); this may change in the future.
   (Negation, of course, still has higher precedence than all binary operators.)
@@ -37,18 +38,18 @@ $ vera tt 'p & 0'
 ┌─┬─────┐
 │p│p &amp; 0│
 ├─┼─────┤
-│<font color="#CC0000">0</font>│<font color="#CC0000">  0  </font>│
-│<font color="#4E9A06">1</font>│<font color="#CC0000">  0  </font>│
+│<font style="color:#CC0000">0</font>│<font style="color:#CC0000">  0  </font>│
+│<font style="color:#4E9A06">1</font>│<font style="color:#CC0000">  0  </font>│
 └─┴─────┘
 
 $ vera tt 'a&b'
 ┌────┬─────┐
 │a  b│a &amp; b│
 ├────┼─────┤
-│<font color="#CC0000">0</font>  <font color="#CC0000">0</font>│<font color="#CC0000">  0  </font>│
-│<font color="#CC0000">0</font>  <font color="#4E9A06">1</font>│<font color="#CC0000">  0  </font>│
-│<font color="#4E9A06">1</font>  <font color="#CC0000">0</font>│<font color="#CC0000">  0  </font>│
-│<font color="#4E9A06">1</font>  <font color="#4E9A06">1</font>│<font color="#4E9A06">  1  </font>│
+│<font style="color:#CC0000">0</font>  <font style="color:#CC0000">0</font>│<font style="color:#CC0000">  0  </font>│
+│<font style="color:#CC0000">0</font>  <font style="color:#4E9A06">1</font>│<font style="color:#CC0000">  0  </font>│
+│<font style="color:#4E9A06">1</font>  <font style="color:#CC0000">0</font>│<font style="color:#CC0000">  0  </font>│
+│<font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>│<font style="color:#4E9A06">  1  </font>│
 └────┴─────┘
 
 $ # Notice superfluous negations are removed and whitespace is added.
@@ -56,14 +57,14 @@ $ vera tt '!!!(p>q)|r'
 ┌───────┬────────────┐
 │p  q  r│!(p &gt; q) | r│
 ├───────┼────────────┤
-│<font color="#CC0000">0</font>  <font color="#CC0000">0</font>  <font color="#CC0000">0</font>│<font color="#CC0000">     0      </font>│
-│<font color="#CC0000">0</font>  <font color="#CC0000">0</font>  <font color="#4E9A06">1</font>│<font color="#4E9A06">     1      </font>│
-│<font color="#CC0000">0</font>  <font color="#4E9A06">1</font>  <font color="#CC0000">0</font>│<font color="#CC0000">     0      </font>│
-│<font color="#CC0000">0</font>  <font color="#4E9A06">1</font>  <font color="#4E9A06">1</font>│<font color="#4E9A06">     1      </font>│
-│<font color="#4E9A06">1</font>  <font color="#CC0000">0</font>  <font color="#CC0000">0</font>│<font color="#4E9A06">     1      </font>│
-│<font color="#4E9A06">1</font>  <font color="#CC0000">0</font>  <font color="#4E9A06">1</font>│<font color="#4E9A06">     1      </font>│
-│<font color="#4E9A06">1</font>  <font color="#4E9A06">1</font>  <font color="#CC0000">0</font>│<font color="#CC0000">     0      </font>│
-│<font color="#4E9A06">1</font>  <font color="#4E9A06">1</font>  <font color="#4E9A06">1</font>│<font color="#4E9A06">     1      </font>│
+│<font style="color:#CC0000">0</font>  <font style="color:#CC0000">0</font>  <font style="color:#CC0000">0</font>│<font style="color:#CC0000">     0      </font>│
+│<font style="color:#CC0000">0</font>  <font style="color:#CC0000">0</font>  <font style="color:#4E9A06">1</font>│<font style="color:#4E9A06">     1      </font>│
+│<font style="color:#CC0000">0</font>  <font style="color:#4E9A06">1</font>  <font style="color:#CC0000">0</font>│<font style="color:#CC0000">     0      </font>│
+│<font style="color:#CC0000">0</font>  <font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>│<font style="color:#4E9A06">     1      </font>│
+│<font style="color:#4E9A06">1</font>  <font style="color:#CC0000">0</font>  <font style="color:#CC0000">0</font>│<font style="color:#4E9A06">     1      </font>│
+│<font style="color:#4E9A06">1</font>  <font style="color:#CC0000">0</font>  <font style="color:#4E9A06">1</font>│<font style="color:#4E9A06">     1      </font>│
+│<font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>  <font style="color:#CC0000">0</font>│<font style="color:#CC0000">     0      </font>│
+│<font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>  <font style="color:#4E9A06">1</font>│<font style="color:#4E9A06">     1      </font>│
 └───────┴────────────┘
 </pre>
 
