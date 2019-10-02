@@ -118,22 +118,30 @@ func printHeader(atomics []byte, stmt string, out io.Writer, cs *CharSet) error 
 	return printRow(sb.String(), stmt, out, cs)
 }
 
-func colourize(val bool) string {
-	if val {
-		return color.GreenString("%d", 1)
-	}
-	return color.RedString("%d", 0)
+func centerText(text string, width int) string {
+	// Assumes text is ASCII.
+	return fmt.Sprintf("%[1]*s", -width, fmt.Sprintf("%[1]*s", (width+len(text))/2, text))
 }
 
 func printData(truth uint64, nAtomics int, output bool, outputWidth int, out io.Writer, cs *CharSet) error {
 	var sb strings.Builder
 	for i := nAtomics - 1; i >= 0; i-- {
-		sb.WriteString(colourize(truth&(1<<i) > 0))
+		if truth&(1<<i) > 0 {
+			sb.WriteString(color.GreenString("1"))
+		} else {
+			sb.WriteString(color.RedString("0"))
+		}
 		if i > 0 {
 			sb.WriteString("  ")
 		}
 	}
-	return printRow(sb.String(), colourize(output)+strings.Repeat(" ", outputWidth-1), out, cs)
+	var outputStr string
+	if output {
+		outputStr = color.GreenString(centerText("1", outputWidth))
+	} else {
+		outputStr = color.RedString(centerText("0", outputWidth))
+	}
+	return printRow(sb.String(), outputStr, out, cs)
 }
 
 func printRow(input string, output string, out io.Writer, cs *CharSet) error {
